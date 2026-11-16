@@ -27,11 +27,11 @@ enabled in Sync's Morphe settings. The WebView patch here is only a fallback.
 
 ## Use it
 
-1. Push this repo to GitHub and replace `YOUR_GITHUB_USER` in `patches/build.gradle.kts`.
+1. Push this repo to GitHub and replace `bloopiy` in `patches/build.gradle.kts`.
 2. The **Build and release** Action builds the `.mpp`, publishes release `v<version>` and
    updates `patches-bundle.json`. Bump `version` in `gradle.properties` for each new release.
 3. In Morphe Manager, **remove the old KingOfPoptart bundle**. Then add this repo's bundle:
-   `https://raw.githubusercontent.com/YOUR_GITHUB_USER/sync-extras/main/patches-bundle.json`
+   `https://raw.githubusercontent.com/bloopiy/sync-extras/main/patches-bundle.json`
    (or the release `.mpp`).
 4. Use wchill's dev bundle: `https://raw.githubusercontent.com/wchill/patcheddit/dev/patches-bundle.json`.
    Patch a **stock** Sync APK with both bundles.
