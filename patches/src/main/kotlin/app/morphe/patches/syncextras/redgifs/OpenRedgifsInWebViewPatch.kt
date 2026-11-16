@@ -1,25 +1,27 @@
 /*
- * Copyright 2026 wchill.
- * https://github.com/wchill/patcheddit
- *
+ * Ported from KingOfPoptart/patcheddit (a fork of wchill/patcheddit), GPLv3.
+ * WebView fallback idea credit: pdscomp.
  * See the included NOTICE file for GPLv3 §7(b) and §7(c) terms that apply to this code.
  */
 
-package app.morphe.patches.reddit.customclients.sync.syncforreddit.fix.redgifswebview
+package app.morphe.patches.syncextras.redgifs
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patches.reddit.customclients.AppCompatibility
-import app.morphe.patches.reddit.customclients.ExtensionPatches
-import app.morphe.util.getReference
+import app.morphe.patcher.util.getReference
+import app.morphe.patches.syncextras.EXTENSION_PACKAGE
+import app.morphe.patches.syncextras.SyncForReddit
+import app.morphe.patches.syncextras.syncExtrasExtensionPatch
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
-private const val HELPER_CLASS = "Lapp/morphe/extension/syncforreddit/RedgifsWebViewHelper;"
+private const val HELPER_CLASS = "$EXTENSION_PACKAGE/RedgifsWebViewHelper;"
 
 @Suppress("unused")
-val openRedgifsInWebView = bytecodePatch(
+val openRedgifsInWebViewPatch = bytecodePatch(
     name = "Open Redgifs links in WebView on failure",
     description = "When a Redgifs video fails to load in the native player" +
         " (\"Error connecting to Redgifs\"), automatically falls back to an in-app WebView" +
@@ -27,9 +29,9 @@ val openRedgifsInWebView = bytecodePatch(
         " WebView only opens as a fallback on failure. Redgifs pages in the WebView also" +
         " try to auto-accept the cookie consent banner and keep it accepted between opens.",
 ) {
-    compatibleWith(*AppCompatibility.SyncForReddit)
+    compatibleWith(SyncForReddit)
 
-    dependsOn(ExtensionPatches.Sync)
+    dependsOn(syncExtrasExtensionPatch)
 
     execute {
         // Hook the failure listener of the Redgifs playback flow instead of the link
@@ -39,7 +41,7 @@ val openRedgifsInWebView = bytecodePatch(
         // its error handling entirely: no error flash before the WebView appears, and
         // Back from the WebView returns to the page that opened the player instead of
         // a dead error screen.
-        redgifsErrorListenerFingerprint.method.apply {
+        RedgifsErrorListenerFingerprint.method.apply {
             addInstructions(
                 0,
                 """
@@ -61,7 +63,7 @@ val openRedgifsInWebView = bytecodePatch(
         // Auto-accept the CookieYes consent banner on redgifs pages loaded in the
         // in-app WebView (all logic lives in the extension helper; no extra
         // registers needed here since onPageFinished's params are the arguments).
-        webViewClientOnPageFinishedFingerprint.method.apply {
+        WebViewClientOnPageFinishedFingerprint.method.apply {
             addInstructions(
                 0,
                 """
@@ -74,21 +76,25 @@ val openRedgifsInWebView = bytecodePatch(
         // with a helper call that skips it for redgifs URLs, so the consent the
         // auto-click above accepts actually persists. Single-instruction ops
         // only -- no control flow inserted into the target method.
-        webViewFragmentOnViewCreatedFingerprint.method.apply {
+        WebViewFragmentOnViewCreatedFingerprint.method.apply {
             val index = indexOfFirstInstructionOrThrow {
                 val reference = getReference<MethodReference>()
                 reference?.name == "removeAllCookie" &&
                     reference.definingClass == "Landroid/webkit/CookieManager;"
             }
+            // Take the CookieManager register from the original call instead of
+            // assuming one, and load the URL into a register that isn't it.
+            val cookieManagerRegister = getInstruction<FiveRegisterInstruction>(index).registerC
+            val urlRegister = if (cookieManagerRegister == 0) 1 else 0
             addInstructions(
                 index,
                 """
-                iget-object v0, p0, Lcom/laurencedawson/reddit_sync/ui/fragments/WebViewFragment;->r0:Ljava/lang/String;
+                iget-object v$urlRegister, p0, Lcom/laurencedawson/reddit_sync/ui/fragments/WebViewFragment;->r0:Ljava/lang/String;
                 """
             )
             replaceInstruction(
                 index + 1,
-                "invoke-static { p1, v0 }, $HELPER_CLASS->removeAllCookieUnlessRedgifs(Landroid/webkit/CookieManager;Ljava/lang/String;)V"
+                "invoke-static { v$cookieManagerRegister, v$urlRegister }, $HELPER_CLASS->removeAllCookieUnlessRedgifs(Landroid/webkit/CookieManager;Ljava/lang/String;)V"
             )
         }
     }
