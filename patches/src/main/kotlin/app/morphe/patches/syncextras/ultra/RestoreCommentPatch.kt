@@ -1,22 +1,24 @@
 /*
- * Ported from humzakh/HK-Morphe-Patches (https://github.com/humzakh/HK-Morphe-Patches), GPLv3.
+ * Ported from humzakh/HK-Morphe-Patches (https://github.com/humzakh/HK-Morphe-Patches), GPLv3,
+ * via KingOfPoptart/patcheddit.
  */
-package app.morphe.patches.reddit.customclients.sync.syncforreddit.fix.ultra
+package app.morphe.patches.syncextras.ultra
 
-import app.morphe.patches.reddit.customclients.AppCompatibility
-
-import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patches.all.misc.string.replaceStringPatch
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
-import app.morphe.patcher.extensions.InstructionExtensions.instructions
 import app.morphe.patcher.StringComparisonType
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.getReference
+import app.morphe.patches.all.misc.string.replaceStringPatch
+import app.morphe.patches.syncextras.SyncForReddit
+import app.morphe.util.indexOfFirstInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 @Suppress("unused")
 val restoreCommentPatch = bytecodePatch(
     name = "Fix \"Restore Comment\"",
     description = "Fixes the \"Restore Comment\" feature (requires Sync Ultra) by fetching from an alternative API. Also includes UI changes to make this feature more accessible."
 ) {
-    compatibleWith(*AppCompatibility.SyncForReddit)
+    compatibleWith(SyncForReddit)
 
     dependsOn(
         syncUltraPatch,
@@ -222,25 +224,10 @@ val restoreCommentPatch = bytecodePatch(
 
         // replace comment text notifying the user if Restore Comment failed
         RestoreCommentParseNetworkResponseFingerprint.method.apply {
-            val bodyExtractionIndex = this.instructions.indexOfFirst { instr ->
-                try {
-                    val getRefMethod = instr.javaClass.methods.firstOrNull { it.name == "getReference" }
-                    if (getRefMethod != null) {
-                        val ref = getRefMethod.invoke(instr)
-                        if (ref != null) {
-                            val getDefClassMethod = ref.javaClass.methods.firstOrNull { it.name == "getDefiningClass" }
-                            val getNameMethod = ref.javaClass.methods.firstOrNull { it.name == "getName" }
-                            if (getDefClassMethod != null && getNameMethod != null) {
-                                val definingClass = getDefClassMethod.invoke(ref) as? String
-                                val name = getNameMethod.invoke(ref) as? String
-                                if (definingClass == "Lwc/p;" && name == "a") {
-                                    return@indexOfFirst true
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) { }
-                false
+            // Index of the call that extracts the response body (wc.p.a); -1 if absent.
+            val bodyExtractionIndex = indexOfFirstInstruction {
+                val reference = getReference<MethodReference>()
+                reference?.definingClass == "Lwc/p;" && reference.name == "a"
             }
             if (bodyExtractionIndex != -1) {
                 this.addInstructions(
