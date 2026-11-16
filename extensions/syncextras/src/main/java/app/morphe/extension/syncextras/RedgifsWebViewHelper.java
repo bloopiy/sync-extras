@@ -1,15 +1,24 @@
-package app.morphe.extension.syncforreddit;
+/*
+ * Ported from KingOfPoptart/patcheddit (a fork of wchill/patcheddit), GPLv3.
+ * See the included NOTICE file for GPLv3 §7(b) and §7(c) terms.
+ */
+
+package app.morphe.extension.syncextras;
 
 import android.net.Uri;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
 
 /**
- * Helpers for the "Open Redgifs links in WebView" patch: auto-accept the
+ * Helpers for the "Open Redgifs links in WebView on failure" patch: auto-accept the
  * CookieYes consent banner on redgifs pages and keep the consent cookie
  * alive across WebView opens.
+ *
+ * @noinspection unused
  */
-public class RedgifsWebViewHelper {
+public final class RedgifsWebViewHelper {
+    private RedgifsWebViewHelper() {
+    }
 
     // CookieYes accept button: current markup ([data-cky-tag="accept-button"])
     // with the legacy class (.cky-btn-accept) as fallback. The banner is built
@@ -23,12 +32,10 @@ public class RedgifsWebViewHelper {
 
     /**
      * Called from WebViewFragment$a.onPageFinished: auto-click the CookieYes
-     * accept button on redgifs pages. Clicking sets CookieYes's own consent
-     * cookie, which then persists (see shouldKeepCookies), so the banner --
-     * and this click -- only ever happen once.
+     * accept button on redgifs pages.
      */
     public static void onPageFinished(WebView view, String url) {
-        if (!isRedgifs(url)) return;
+        if (view == null || !isRedgifs(url)) return;
         view.evaluateJavascript(ACCEPT_JS, null);
     }
 
@@ -38,14 +45,11 @@ public class RedgifsWebViewHelper {
      * wipe: skips it for redgifs URLs so the CookieYes consent cookie survives
      * between opens, and performs it unchanged for everything else.
      */
+    @SuppressWarnings("deprecation")
     public static void removeAllCookieUnlessRedgifs(CookieManager cookieManager, String url) {
-        if (!shouldKeepCookies(url)) {
+        if (!isRedgifs(url)) {
             cookieManager.removeAllCookie();
         }
-    }
-
-    public static boolean shouldKeepCookies(String url) {
-        return isRedgifs(url);
     }
 
     private static boolean isRedgifs(String url) {
