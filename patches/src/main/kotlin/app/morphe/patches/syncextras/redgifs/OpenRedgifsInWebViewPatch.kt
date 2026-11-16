@@ -13,6 +13,7 @@ import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.getReference
 import app.morphe.patches.syncextras.EXTENSION_PACKAGE
 import app.morphe.patches.syncextras.SyncForReddit
+import app.morphe.patches.syncextras.attributionPatch
 import app.morphe.patches.syncextras.syncExtrasExtensionPatch
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -31,7 +32,7 @@ val openRedgifsInWebViewPatch = bytecodePatch(
 ) {
     compatibleWith(SyncForReddit)
 
-    dependsOn(syncExtrasExtensionPatch)
+    dependsOn(syncExtrasExtensionPatch, attributionPatch)
 
     execute {
         // Hook the failure listener of the Redgifs playback flow instead of the link

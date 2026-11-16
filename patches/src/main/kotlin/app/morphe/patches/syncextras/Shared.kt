@@ -1,5 +1,7 @@
 package app.morphe.patches.syncextras
 
+import app.morphe.patcher.Fingerprint
+import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.patch.AppTarget
 import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.bytecodePatch
@@ -22,4 +24,26 @@ internal const val EXTENSION_PACKAGE = "Lapp/morphe/extension/syncextras"
  */
 internal val syncExtrasExtensionPatch = bytecodePatch(default = false) {
     extendWith("extensions/syncextras.mpe")
+}
+
+private object RedditApplicationOnCreateFingerprint : Fingerprint(
+    definingClass = "Lcom/laurencedawson/reddit_sync/RedditApplication;",
+    name = "onCreate",
+    parameters = listOf(),
+    returnType = "V",
+)
+
+/**
+ * Shows the attribution message Patcheddit's NOTICE (GPLv3 §7(b)) requires for code
+ * derived from it. Pulled in as a dependency by the Redgifs patches only.
+ */
+internal val attributionPatch = bytecodePatch(default = false) {
+    dependsOn(syncExtrasExtensionPatch)
+
+    execute {
+        RedditApplicationOnCreateFingerprint.method.addInstruction(
+            0,
+            "invoke-static { p0 }, $EXTENSION_PACKAGE/Attribution;->show(Landroid/content/Context;)V"
+        )
+    }
 }
