@@ -2,39 +2,27 @@ group = "app.morphe"
 
 patches {
     about {
-        name = "Patcheddit"
-        description = "Morphe Patches for Reddit"
-        source = "git@github.com:wchill/patcheddit.git"
-        author = "wchill"
-        contact = "w@chill.dev"
-        website = "https://github.com/wchill/patcheddit"
-        license = "Additional conditions under GPL section 7 apply: attribution and project name restrictions. See LICENSE file."
+        name = "Sync Extras"
+        description = "Add-on patches for Sync for Reddit. Use alongside wchill/patcheddit, not instead of it."
+        source = "git@github.com:YOUR_GITHUB_USER/sync-extras.git"
+        author = "YOUR_GITHUB_USER"
+        contact = "https://github.com/YOUR_GITHUB_USER/sync-extras/issues"
+        website = "https://github.com/YOUR_GITHUB_USER/sync-extras"
+        license = "GPLv3. Contains code from Patcheddit; additional GPL section 7 terms apply, see NOTICE."
     }
 }
 
 dependencies {
-    // Used by JsonGenerator.
+    // Used by the library's JSON generator.
     implementation(libs.gson)
 
     // Required due to smali, or build fails. Can be removed once smali is bumped.
     implementation(libs.guava)
 
     implementation(libs.morphe.patches.library)
-
-    // Android API stubs defined here.
-    compileOnly(project(":patches:stub"))
 }
 
 tasks {
-    register<JavaExec>("checkStringResources") {
-        description = "Checks resource strings for invalid formatting"
-
-        dependsOn(compileKotlin)
-
-        classpath = sourceSets["main"].runtimeClasspath
-        mainClass.set("app.morphe.util.resource.CheckStringResourcesKt")
-    }
-
     register<JavaExec>("generatePatchesList") {
         description = "Build patch with patch list"
 
@@ -43,27 +31,10 @@ tasks {
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("app.morphe.util.PatchListGeneratorKt")
     }
-    // Used by gradle-semantic-release-plugin.
-    publish {
-        dependsOn("generatePatchesList")
-    }
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs = listOf("-Xcontext-parameters")
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/wchill/patcheddit")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
     }
 }

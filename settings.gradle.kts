@@ -1,4 +1,4 @@
-rootProject.name = "patcheddit"
+rootProject.name = "sync-extras"
 
 pluginManagement {
     repositories {
@@ -14,7 +14,6 @@ pluginManagement {
             }
         }
         // Obtain baksmali/smali from source builds - https://github.com/iBotPeaches/smali
-        // Remove when official smali releases come out again.
         maven { url = uri("https://jitpack.io") }
     }
 }
@@ -27,31 +26,16 @@ dependencyResolutionManagement {
     }
 }
 
+// Same Morphe toolchain as wchill/patcheddit, so both bundles run on one patcher.
 plugins {
-    id("app.morphe.patches") version "1.3.2"
+    id("app.morphe.patches") version "2.0.0"
 }
 
 settings {
     extensions {
         defaultNamespace = "app.morphe.extension"
 
-        // Must resolve to an absolute path (not relative),
-        // otherwise the extensions in subfolders will fail to find the proguard config.
+        // Must be an absolute path, or extensions in subfolders can't find the proguard config.
         proguardFiles(rootProject.projectDir.resolve("extensions/proguard-rules.pro").toString())
-    }
-}
-
-include(":patches:stub")
-
-// Include morphe-patches-library as composite build if it exists locally.
-// It is a multi-module project, so each artifact maps to a specific subproject.
-file("../morphe-patches-library").let { libDir ->
-    if (libDir.exists()) {
-        includeBuild(libDir) {
-            dependencySubstitution {
-                substitute(module("app.morphe:morphe-patches-library")).using(project(":patch-library"))
-                substitute(module("app.morphe:morphe-extensions-library")).using(project(":extension-library"))
-            }
-        }
     }
 }
