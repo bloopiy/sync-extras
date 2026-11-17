@@ -1,6 +1,5 @@
 package app.morphe.patches.syncextras
 
-import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.patch.AppTarget
 import app.morphe.patcher.patch.Compatibility
@@ -25,13 +24,6 @@ internal const val EXTENSION_PACKAGE = "Lapp/morphe/extension/syncextras"
 internal val syncExtrasExtensionPatch = bytecodePatch(default = false) {
     extendWith("extensions/syncextras.mpe")
 }
-
-private object RedditApplicationOnCreateFingerprint : Fingerprint(
-    definingClass = "Lcom/laurencedawson/reddit_sync/RedditApplication;",
-    name = "onCreate",
-    parameters = listOf(),
-    returnType = "V",
-)
 
 /**
  * Shows the attribution message Patcheddit's NOTICE (GPLv3 §7(b)) requires for code
