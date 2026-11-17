@@ -15,6 +15,22 @@ emulation, token refresh, malformed-link fix). Older wchill releases lack it, so
 video fails and drops to the WebView. Keep wchill's **Fix Redgifs API** turned on, and enabled
 in Sync's Morphe settings. The WebView patch here is only a fallback.
 
+## Settings
+
+If wchill's **Sync Morphe settings** patch is also applied, Sync Extras adds its own entries
+to that menu (open it from Sync's settings), in wchill's matching sections:
+
+| Entry | Section | Type |
+|---|---|---|
+| Unlock Sync Ultra | Other patches | Switch (restart the app after changing) |
+| Open Redgifs links in WebView on failure | Media | Switch (restart the app after changing) |
+| Fix "Restore Comment" | Undelete | Information only (repatch to change) |
+
+Without wchill's menu, nothing is added and every patch stays on. This doesn't link against
+wchill's code: it only relies on wchill's menu file (`res/xml/morphe_settings.xml`), its
+section keys and the app's default SharedPreferences. If wchill changes those, the entries
+stop appearing, but patching still succeeds and the patches keep their defaults.
+
 ## Why this doesn't clash with wchill
 
 * **Own extension namespace.** Code lives in `app.morphe.extension.syncextras`, loaded from

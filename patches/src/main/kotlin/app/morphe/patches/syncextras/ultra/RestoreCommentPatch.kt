@@ -9,9 +9,22 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.getReference
 import app.morphe.patches.all.misc.string.replaceStringPatch
+import app.morphe.patches.syncextras.SettingsSection
+import app.morphe.patches.syncextras.SyncExtrasSetting
 import app.morphe.patches.syncextras.SyncForReddit
+import app.morphe.patches.syncextras.syncExtrasSettingPatch
 import app.morphe.util.indexOfFirstInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+
+// Informational entry: the fix is mostly a URL rewritten at patch time, so it can't be
+// switched off at runtime. Turning off "Unlock Sync Ultra" disables the feature anyway.
+private val restoreCommentSetting = SyncExtrasSetting(
+    key = "morphe_patch_syncextras_restore_comment",
+    title = "Fix \"Restore Comment\"",
+    summary = "Loads removed comments from Arctic Shift instead of Pushshift. Needs Unlock Sync Ultra.",
+    section = SettingsSection.UNDELETE,
+    readOnly = true,
+)
 
 @Suppress("unused")
 val restoreCommentPatch = bytecodePatch(
@@ -22,6 +35,7 @@ val restoreCommentPatch = bytecodePatch(
 
     dependsOn(
         syncUltraPatch,
+        syncExtrasSettingPatch(restoreCommentSetting),
         // patch the Restore Comment feature to fetch from Arctic Shift
         replaceStringPatch(
             "https://api.pushshift.io/reddit/comment/search/",

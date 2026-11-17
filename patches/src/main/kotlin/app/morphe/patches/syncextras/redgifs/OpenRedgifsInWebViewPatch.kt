@@ -12,14 +12,27 @@ import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.getReference
 import app.morphe.patches.syncextras.EXTENSION_PACKAGE
+import app.morphe.patches.syncextras.SETTINGS_CLASS
+import app.morphe.patches.syncextras.SettingsSection
+import app.morphe.patches.syncextras.SyncExtrasSetting
 import app.morphe.patches.syncextras.SyncForReddit
 import app.morphe.patches.syncextras.attributionPatch
 import app.morphe.patches.syncextras.syncExtrasExtensionPatch
+import app.morphe.patches.syncextras.syncExtrasSettingPatch
+import app.morphe.patches.syncextras.syncExtrasSettingsContextPatch
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 private const val HELPER_CLASS = "$EXTENSION_PACKAGE/RedgifsWebViewHelper;"
+
+// Key must match SyncExtrasSettings.REDGIFS_WEBVIEW_FALLBACK.
+private val redgifsWebViewSetting = SyncExtrasSetting(
+    key = "morphe_patch_syncextras_redgifs_webview_fallback",
+    title = "Open Redgifs links in WebView on failure",
+    summary = "If a Redgifs video still fails in the native player, open the Redgifs page in the in-app browser instead of showing an error.",
+    section = SettingsSection.MEDIA,
+)
 
 @Suppress("unused")
 val openRedgifsInWebViewPatch = bytecodePatch(
@@ -32,13 +45,18 @@ val openRedgifsInWebViewPatch = bytecodePatch(
 ) {
     compatibleWith(SyncForReddit)
 
-    dependsOn(syncExtrasExtensionPatch, attributionPatch)
+    dependsOn(
+        syncExtrasExtensionPatch,
+        attributionPatch,
+        syncExtrasSettingsContextPatch,
+        syncExtrasSettingPatch(redgifsWebViewSetting),
+    )
 
     execute {
         // Hook the failure listener of the Redgifs playback flow instead of the link
         // opener: the native/API player always runs first, and only an actual failure
         // (dead endpoint, 404 on a malformed ID, bot detection, ...) opens the WebView.
-        // Unconditional -- no settings gate. On fallback we finish the player and skip
+        // Gated by the Sync Extras switch (on by default). On fallback we finish the player and skip
         // its error handling entirely: no error flash before the WebView appears, and
         // Back from the WebView returns to the page that opened the player instead of
         // a dead error screen.
@@ -46,6 +64,9 @@ val openRedgifsInWebViewPatch = bytecodePatch(
             addInstructions(
                 0,
                 """
+                invoke-static { }, $SETTINGS_CLASS->isRedgifsWebViewFallbackEnabled()Z
+                move-result v0
+                if-eqz v0, :noFallback
                 iget-object v0, p0, Lcom/laurencedawson/reddit_sync/ui/fragments/ImageViewerFragment${'$'}g0;->b:Lcom/laurencedawson/reddit_sync/ui/fragments/ImageViewerFragment;
                 invoke-virtual { v0 }, Landroidx/fragment/app/Fragment;->B0()Landroidx/fragment/app/FragmentActivity;
                 move-result-object v0

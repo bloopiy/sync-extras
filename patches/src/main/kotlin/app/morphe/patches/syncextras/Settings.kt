@@ -53,6 +53,8 @@ internal class SyncExtrasSetting(
 ) {
     init {
         require(key.matches(Regex("morphe_patch_syncextras_[a-z0-9_]+"))) { "Invalid Sync Extras key: $key" }
+        // Plain text only: aapt2 can reject unescaped apostrophes in resource strings.
+        require('\'' !in title && '\'' !in summary) { "Sync Extras setting text must not contain apostrophes: $key" }
     }
 }
 

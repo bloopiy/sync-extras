@@ -35,7 +35,7 @@ public final class RedgifsWebViewHelper {
      * accept button on redgifs pages.
      */
     public static void onPageFinished(WebView view, String url) {
-        if (view == null || !isRedgifs(url)) return;
+        if (view == null || !isRedgifs(url) || !SyncExtrasSettings.isRedgifsWebViewFallbackEnabled()) return;
         view.evaluateJavascript(ACCEPT_JS, null);
     }
 
@@ -47,7 +47,8 @@ public final class RedgifsWebViewHelper {
      */
     @SuppressWarnings("deprecation")
     public static void removeAllCookieUnlessRedgifs(CookieManager cookieManager, String url) {
-        if (!isRedgifs(url)) {
+        // With the fallback switched off, behave exactly like stock Sync.
+        if (!isRedgifs(url) || !SyncExtrasSettings.isRedgifsWebViewFallbackEnabled()) {
             cookieManager.removeAllCookie();
         }
     }
