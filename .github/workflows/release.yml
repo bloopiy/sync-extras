@@ -66,7 +66,7 @@ jobs:
             --arg url "https://github.com/${{ github.repository }}/releases/download/v$VERSION/$ASSET" \
             --arg version "$VERSION" \
             '{created_at: $created,
-              description: "Sync Extras: Unlock Sync Ultra, Fix \"Restore Comment\" and Redgifs WebView fallback. Add-on for wchill/patcheddit (dev channel).",
+              description: "Sync Extras: Unlock Sync Ultra, Fix \"Restore Comment\" and Redgifs WebView fallback. Add-on for wchill/patcheddit.",
               download_url: $url,
               version: $version}' > patches-bundle.json
           git config user.name "github-actions[bot]"

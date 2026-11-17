@@ -10,10 +10,10 @@ patches that [wchill/patcheddit](https://github.com/wchill/patcheddit) doesn't h
 | Fix "Restore Comment" (needs Ultra; uses Arctic Shift) | on | humzakh/HK-Morphe-Patches via KingOfPoptart |
 | Open Redgifs links in WebView on failure | on | KingOfPoptart (idea: pdscomp) |
 
-**Use wchill's dev channel** (v2.3.0-dev.2 or newer). It carries the working Redgifs fix
-(`/info` emulation, token refresh, malformed-link fix). wchill's stable v2.2.0 lacks it, so every
-Redgifs video fails and drops to the WebView. Keep wchill's **Fix Redgifs API** turned on, and
-enabled in Sync's Morphe settings. The WebView patch here is only a fallback.
+**Use wchill v2.3.0 or newer** (stable). It carries the working Redgifs fix (`/info`
+emulation, token refresh, malformed-link fix). Older wchill releases lack it, so every Redgifs
+video fails and drops to the WebView. Keep wchill's **Fix Redgifs API** turned on, and enabled
+in Sync's Morphe settings. The WebView patch here is only a fallback.
 
 ## Why this doesn't clash with wchill
 
@@ -33,7 +33,7 @@ enabled in Sync's Morphe settings. The WebView patch here is only a fallback.
 3. In Morphe Manager, **remove the old KingOfPoptart bundle**. Then add this repo's bundle:
    `https://raw.githubusercontent.com/bloopiy/sync-extras/main/patches-bundle.json`
    (or the release `.mpp`).
-4. Use wchill's dev bundle: `https://raw.githubusercontent.com/wchill/patcheddit/dev/patches-bundle.json`.
+4. Use wchill's bundle: `https://raw.githubusercontent.com/wchill/patcheddit/main/patches-bundle.json`.
    Patch a **stock** Sync APK with both bundles.
 
 Build locally: `./gradlew :patches:buildAndroid` (needs the Android SDK, plus a GitHub
